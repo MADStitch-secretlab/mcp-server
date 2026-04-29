@@ -1,0 +1,14 @@
+[
+  {
+    "id": "factsheet.admin",
+    "email": "admin@factsheet.local",
+    "password": "Factsheet!2026",
+    "name": "Factsheet Admin"
+  },
+  {
+    "id": "upflow.demo",
+    "email": "demo@upflow.local",
+    "password": "Upflow!2026",
+    "name": "Upflow Demo"
+  }
+]
