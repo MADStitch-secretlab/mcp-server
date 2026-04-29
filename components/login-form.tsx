@@ -1,11 +1,17 @@
 "use client"
 
 import type { FormEvent } from "react"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowRight, Loader2 } from "lucide-react"
 
 import type { SearchParamEntries } from "@/lib/search-params"
+import {
+  createOAuthParams,
+  getEffectiveOAuthParams,
+  hasRedirectUrl,
+  saveOAuthParams,
+} from "@/lib/oauth-params"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,8 +22,17 @@ export default function LoginForm({
   initialParams: SearchParamEntries
 }) {
   const router = useRouter()
+  const incomingParams = useMemo(
+    () => createOAuthParams(initialParams),
+    [initialParams],
+  )
+  const hasIncomingRedirectUrl = hasRedirectUrl(incomingParams)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+
+  useEffect(() => {
+    saveOAuthParams(incomingParams)
+  }, [incomingParams])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -27,7 +42,7 @@ export default function LoginForm({
     const formData = new FormData(event.currentTarget)
     const loginId = String(formData.get("loginId") || "")
     const password = String(formData.get("password") || "")
-    const params = new URLSearchParams(initialParams)
+    const params = getEffectiveOAuthParams(initialParams)
     const query = params.toString()
 
     try {
@@ -49,7 +64,13 @@ export default function LoginForm({
         return
       }
 
-      router.push(query ? `/select-company?${query}` : "/select-company")
+      if (!hasRedirectUrl(params)) {
+        router.push("/")
+        return
+      }
+
+      saveOAuthParams(params)
+      router.push(`/select-company?${query}`)
     } catch {
       setError("로그인 요청 중 오류가 발생했습니다.")
       setLoading(false)
@@ -88,6 +109,10 @@ export default function LoginForm({
       {error ? (
         <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
+        </p>
+      ) : !hasIncomingRedirectUrl ? (
+        <p className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          redirectUrl 없이 열린 화면입니다. 일반 로그인으로 처리됩니다.
         </p>
       ) : null}
 

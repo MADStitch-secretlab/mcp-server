@@ -1,9 +1,15 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { ArrowRight, Loader2 } from "lucide-react"
 
 import type { SearchParamEntries } from "@/lib/search-params"
+import {
+  createOAuthParams,
+  getEffectiveOAuthParams,
+  hasRedirectUrl,
+  saveOAuthParams,
+} from "@/lib/oauth-params"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -20,39 +26,36 @@ export default function CompanySelector({
 }: {
   initialParams: SearchParamEntries
 }) {
-  const params = useMemo(() => new URLSearchParams(initialParams), [initialParams])
+  const incomingParams = useMemo(
+    () => createOAuthParams(initialParams),
+    [initialParams],
+  )
+  const hasIncomingRedirectUrl = hasRedirectUrl(incomingParams)
   const [selected, setSelected] = useState(COMPANIES[0].code)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+
+  useEffect(() => {
+    saveOAuthParams(incomingParams)
+  }, [incomingParams])
 
   function handleSubmit() {
     setLoading(true)
     setError("")
 
-    const redirectUri = params.get("redirect_uri") || ""
-    const state = params.get("state") || ""
+    const params = getEffectiveOAuthParams(initialParams)
+    const redirectUrl = params.get("redirectUrl") || ""
 
-    if (!redirectUri) {
-      const message = "redirect_uri가 없습니다. 직접 접근한 경우입니다."
-      window.alert(message)
+    if (!redirectUrl) {
+      const message =
+        "redirectUrl이 없습니다. MCP 서버가 로그인 URL에 redirectUrl을 붙여서 호출해야 합니다."
       setError(message)
       setLoading(false)
       return
     }
 
-    try {
-      const url = new URL(redirectUri)
-      url.searchParams.set("code", `fake_code_${Date.now()}`)
-      url.searchParams.set("state", state)
-      url.searchParams.set("company_code", selected)
-
-      window.location.href = url.toString()
-    } catch {
-      const message = "redirect_uri 형식이 올바르지 않습니다."
-      window.alert(message)
-      setError(message)
-      setLoading(false)
-    }
+    saveOAuthParams(params)
+    window.location.href = redirectUrl
   }
 
   return (
@@ -78,6 +81,11 @@ export default function CompanySelector({
       {error ? (
         <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
+        </p>
+      ) : !hasIncomingRedirectUrl ? (
+        <p className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          현재 URL에는 redirectUrl이 없습니다. 이전 로그인 단계에서 받은 값이
+          있으면 자동으로 복구합니다.
         </p>
       ) : null}
 
