@@ -32,6 +32,23 @@ http://localhost:3000/login?redirectUrl=http%3A%2F%2Flocalhost%3A8000%2Flogin%2F
 | `factsheet.admin` | `admin@factsheet.local` | `Factsheet!2026` |
 | `upflow.demo` | `demo@upflow.local` | `Upflow!2026` |
 
+## MCP Auth Backend API
+
+MCP 서버가 회사 목록과 회사 전환 토큰을 조회할 수 있도록 프론트백에서 아래 API를 제공합니다.
+
+```text
+GET /mcp/auth/companies
+POST /mcp/auth/token
+```
+
+요청에는 테스트용 Bearer token이 필요합니다.
+
+```text
+Authorization: Bearer fake_access_token_abc123
+```
+
+회사 데이터는 [`data/mcp-companies.json`](./data/mcp-companies.json)에 있습니다.
+
 ## Claude Desktop 연결 주의
 
 Claude Desktop에는 프론트 로그인 URL이 아니라 MCP 서버 주소를 등록해야 합니다.
