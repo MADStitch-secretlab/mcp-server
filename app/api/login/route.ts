@@ -14,6 +14,11 @@ type LoginPayload = {
   password?: unknown
 }
 
+const ACCESS_TOKEN =
+  process.env.FACTSHEET_MOCK_ACCESS_TOKEN || "fake_access_token_abc123"
+const REFRESH_TOKEN =
+  process.env.FACTSHEET_MOCK_REFRESH_TOKEN || "fake_refresh_token_xyz789"
+
 export async function POST(request: Request) {
   let payload: LoginPayload
 
@@ -52,6 +57,8 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
+    accessToken: ACCESS_TOKEN,
+    refreshToken: REFRESH_TOKEN,
     user: {
       id: matchedUser.id,
       email: matchedUser.email,

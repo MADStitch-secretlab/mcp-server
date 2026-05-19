@@ -17,11 +17,22 @@ npm run dev
 http://localhost:3000/login?redirectUrl=http%3A%2F%2Flocalhost%3A8000%2Flogin%2Fcallback%3Fstate%3Dtest123
 ```
 
+새 MCP callback bridge 흐름은 루트 URL의 `cb` 쿼리를 사용합니다.
+
+```text
+http://localhost:3000/?cb=https%3A%2F%2Fexample.trycloudflare.com%2Foauth%2Fcallback%2Fstate123
+```
+
+`cb`가 있으면 `/login`으로 이동한 뒤, 로그인과 회사 선택 완료 시 해당 URL로
+`accessToken`, `refreshToken`, `companyCode`를 JSON POST합니다. 응답의
+`redirect_url`이 있으면 브라우저를 그 URL로 이동시킵니다.
+
 기대 흐름:
 
 1. `/login`에서 이메일과 비밀번호 입력
-2. `/select-company`로 `redirectUrl` 보존 이동
-3. 회사 선택 후 `redirectUrl`로 브라우저 이동
+2. `/select-company`로 `cb` 또는 `redirectUrl` 보존 이동
+3. `cb` 방식이면 callback URL로 로그인 결과 POST 후 `redirect_url` 이동
+4. 기존 `redirectUrl` 방식이면 해당 URL로 브라우저 이동
 
 ## 테스트 계정
 

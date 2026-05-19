@@ -1,9 +1,24 @@
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { ArrowRight, Server } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import {
+  type PageSearchParams,
+  toSearchParamEntries,
+} from "@/lib/search-params"
 
-export default function HomePage() {
+export default function HomePage({
+  searchParams,
+}: {
+  searchParams?: PageSearchParams
+}) {
+  const params = new URLSearchParams(toSearchParamEntries(searchParams))
+
+  if (params.get("cb")) {
+    redirect(`/login?${params.toString()}`)
+  }
+
   const mcpServerUrl =
     process.env.NEXT_PUBLIC_MCP_SERVER_URL || "http://localhost:8000"
 

@@ -9,7 +9,8 @@ import type { SearchParamEntries } from "@/lib/search-params"
 import {
   createOAuthParams,
   getEffectiveOAuthParams,
-  hasRedirectUrl,
+  hasCallbackTarget,
+  saveLoginSession,
   saveOAuthParams,
 } from "@/lib/oauth-params"
 import { Button } from "@/components/ui/button"
@@ -26,7 +27,7 @@ export default function LoginForm({
     () => createOAuthParams(initialParams),
     [initialParams],
   )
-  const hasIncomingRedirectUrl = hasRedirectUrl(incomingParams)
+  const hasIncomingCallback = hasCallbackTarget(incomingParams)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -54,6 +55,8 @@ export default function LoginForm({
         body: JSON.stringify({ loginId, password }),
       })
       const result = (await response.json()) as {
+        accessToken?: string
+        refreshToken?: string
         ok?: boolean
         message?: string
       }
@@ -64,7 +67,17 @@ export default function LoginForm({
         return
       }
 
-      if (!hasRedirectUrl(params)) {
+      if (
+        typeof result.accessToken === "string" &&
+        typeof result.refreshToken === "string"
+      ) {
+        saveLoginSession({
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+        })
+      }
+
+      if (!hasCallbackTarget(params)) {
         router.push("/")
         return
       }
@@ -110,9 +123,10 @@ export default function LoginForm({
         <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
         </p>
-      ) : !hasIncomingRedirectUrl ? (
+      ) : !hasIncomingCallback ? (
         <p className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          redirectUrl 없이 열린 화면입니다. 일반 로그인으로 처리됩니다.
+          cb 또는 redirectUrl 없이 열린 화면입니다. 일반 로그인으로
+          처리됩니다.
         </p>
       ) : null}
 
