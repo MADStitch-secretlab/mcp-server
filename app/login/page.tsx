@@ -12,9 +12,9 @@ export default function LoginPage({
 }) {
   return (
     <AuthShell
-      title="로그인"
-      description="MCP 서버 연동을 위해 로그인하세요"
-      footer="JSON에 등록된 계정만 로그인할 수 있습니다"
+      title="토큰 연결"
+      description="Factsheet 토큰과 회사 코드를 입력하세요"
+      footer="입력한 값은 cb 콜백 URL로만 전송됩니다"
     >
       <LoginForm initialParams={toSearchParamEntries(searchParams)} />
     </AuthShell>

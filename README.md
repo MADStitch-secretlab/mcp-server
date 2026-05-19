@@ -1,6 +1,6 @@
 # Factsheet MCP Login PoC
 
-Next.js 14 App Router 기반의 PoC 로그인 프론트엔드입니다. MCP 서버가 넘겨준 `redirectUrl`로 로그인 완료 후 브라우저를 돌려보냅니다.
+Next.js 14 App Router 기반의 PoC 연결 프론트엔드입니다. `cb` URL로 Factsheet 토큰과 회사 코드를 POST한 뒤, 응답의 `redirect_url`로 브라우저를 돌려보냅니다.
 
 ## 실행
 
@@ -13,35 +13,23 @@ npm run dev
 
 ## 검증 URL
 
-```text
-http://localhost:3000/login?redirectUrl=http%3A%2F%2Flocalhost%3A8000%2Flogin%2Fcallback%3Fstate%3Dtest123
-```
-
 새 MCP callback bridge 흐름은 루트 URL의 `cb` 쿼리를 사용합니다.
 
 ```text
 http://localhost:3000/?cb=https%3A%2F%2Fexample.trycloudflare.com%2Foauth%2Fcallback%2Fstate123
 ```
 
-`cb`가 있으면 `/login`으로 이동한 뒤, 로그인과 회사 선택 완료 시 해당 URL로
-`accessToken`, `refreshToken`, `companyCode`를 JSON POST합니다. 응답의
-`redirect_url`이 있으면 브라우저를 그 URL로 이동시킵니다.
+`cb`가 있으면 `/login`으로 이동한 뒤, 사용자가 직접 입력한
+`accessToken`, `refreshToken`, `companyCode`를 해당 URL로 JSON POST합니다.
+응답의 `redirect_url`이 있으면 브라우저를 그 URL로 이동시킵니다.
 
 기대 흐름:
 
-1. `/login`에서 이메일과 비밀번호 입력
-2. `/select-company`로 `cb` 또는 `redirectUrl` 보존 이동
-3. `cb` 방식이면 callback URL로 로그인 결과 POST 후 `redirect_url` 이동
-4. 기존 `redirectUrl` 방식이면 해당 URL로 브라우저 이동
-
-## 테스트 계정
-
-계정 정보는 [`data/login-users.json`](./data/login-users.json)에 있습니다. 아이디 또는 이메일로 로그인할 수 있습니다.
-
-| 아이디 | 이메일 | 비밀번호 |
-| --- | --- | --- |
-| `factsheet.admin` | `admin@factsheet.local` | `Factsheet!2026` |
-| `upflow.demo` | `demo@upflow.local` | `Upflow!2026` |
+1. `/?cb=...`로 진입
+2. `/login?cb=...`로 이동
+3. `/login`에서 `accessToken`, `refreshToken`, `companyCode` 직접 입력
+4. `cb` URL로 JSON POST
+5. 응답의 `redirect_url`로 브라우저 이동
 
 ## MCP Auth Backend API
 
@@ -68,13 +56,13 @@ Claude Desktop에는 프론트 로그인 URL이 아니라 MCP 서버 주소를 �
 http://localhost:8000/mcp
 ```
 
-인증이 정상 시작되면 MCP 서버의 `/authorize`가 다음처럼 프론트로 이동시켜야 합니다.
+인증이 정상 시작되면 MCP 서버가 다음처럼 프론트로 이동시켜야 합니다.
 
 ```text
-http://localhost:3000/login?redirectUrl=https%3A%2F%2FMCP서버%2Flogin%2Fcallback%3Fstate%3D...
+http://localhost:3000/?cb=https%3A%2F%2F...%2Foauth%2Fcallback%2Fstate
 ```
 
-프론트는 `redirectUrl`을 직접 수정하지 않습니다. `code`, `state`, `redirect_uri`를 새로 조립하지 않고 회사 선택 완료 시 `window.location.href = redirectUrl`만 수행합니다.
+프론트는 OAuth `state`, PKCE, `redirect_uri`를 직접 조립하지 않습니다. `cb` 값 그대로 JSON POST하고, 응답의 `redirect_url`만 따라갑니다.
 
 ## 환경변수
 
